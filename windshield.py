@@ -1,29 +1,84 @@
+import logging
 import datetime
 import urllib.request
 import codecs
+import sys
 import csv
 
 snow = False
 rain = False
+frost_scores = []
+frost_sum = 0
+date_time_UTC_last = None
 
+# Get station code input
 airport_code = input("Station Code: ")
 
+# Get current time
 now = datetime.datetime.now()
 
+# Load the weather data
 url = ("http://api.wunderground.com/history/airport/" + airport_code + "/" + 
-str(now.year) + "/" + str(now.month) + "/" + str(now.day) + 
-"/DailyHistory.html?format=1")
+       str(now.year) + "/" + str(now.month) + "/" + str(now.day) + 
+       "/DailyHistory.html?format=1")
 ftpstream = urllib.request.urlopen(url)
 file = codecs.iterdecode(ftpstream, 'utf-8')
-next(file)
+
+next(file) # Skip first line which is blank
+next(file) # Skip second line which is headers
+# For each line in file, extract data and adjust variables
 for line in file:
-    events = line.strip().split(',')[10]
+    if "No daily or hourly history data available" in line:
+        print("No data found for that station code today")
+        sys.exit(1)
+    data = line.strip().split(',')
+    events = data[10]
     if "Snow" in events:
         snow = True
-    elif "Rain" in events:
+        rain = False
+    if "Rain" in events:
         rain = True
+        snow = False
+    temp = float(data[1])
+    dewpoint = float(data[2])
+    if "Calm" in data[7]:
+        wind_speed = 0
+    else:
+        wind_speed = float(data[7])
+    date_time_UTC = datetime.datetime.strptime(data[13][0:19], 
+                    "%Y-%m-%d %H:%M:%S")
+    if date_time_UTC_last is not None:
+        difference = date_time_UTC - date_time_UTC_last
+        time_multiplier = difference.total_seconds() / 3600
+        if "Rain" not in events and \
+           "Snow" not in events and \
+           dewpoint <= 32 and \
+           temp - dewpoint < 4:
+            frost_score = (4 - (temp - dewpoint)) * time_multiplier
+            if wind_speed <= 5:
+                frost_scores.append(frost_score)
+            elif wind_speed > 5 and wind_speed < 15:
+                wind_adjustment = - 0.1 * wind_speed + 1.5
+                frost_scores.append(wind_adjustment * frost_score)
+        else:
+            frost_score = 0
+        logging.debug("Time: " + str(date_time_UTC) + "\tPeriod: " + 
+              str(time_multiplier) + "\tTemperature: " + str(temp) + 
+              "\tDewpoint: " + str(dewpoint) + "\tWind : " + str(wind_speed)
+              + "\tFrost Score: " + str(frost_score))
+    date_time_UTC_last = date_time_UTC
 
+# Sum the frost scores
+for score in frost_scores:
+    frost_sum += score
+
+print(str(now.month) + "/" + str(now.day) + ": ", end="")
 if snow:
-    print("It snowed")
-if rain:
-    print("It rained")
+    print("There may be snow on the windshield")
+elif rain:
+    print("There may be rain on the windshield")
+elif frost_sum > 12:
+    print("There may be frost on the windshield")
+else:
+    print("There may be nothing on the windshield")
+logging.debug("Frost Sum: " + str(frost_sum))
