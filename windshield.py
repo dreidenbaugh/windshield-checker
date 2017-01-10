@@ -32,7 +32,11 @@ now = datetime.datetime.now()
 url = ("http://api.wunderground.com/history/airport/" + airport_code + "/" + 
        str(now.year) + "/" + str(now.month) + "/" + str(now.day) + 
        "/DailyHistory.html?format=1")
-ftpstream = urllib.request.urlopen(url)
+try:
+    ftpstream = urllib.request.urlopen(url)
+except:
+    print("Data could not be retrieved")
+    sys.exit(1)
 file = codecs.iterdecode(ftpstream, 'utf-8')
 
 next(file) # Skip first line which is blank
