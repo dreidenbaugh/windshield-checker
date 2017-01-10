@@ -11,8 +11,19 @@ frost_scores = []
 frost_sum = 0
 date_time_UTC_last = None
 
-# Get station code input
-airport_code = input("Station Code: ")
+# Check for and get station code from argument
+if len(sys.argv) is 2:
+    airport_code = sys.argv[1]
+    if not airport_code.isalnum():
+        print("Invalid station code\nNote: Most airports have weather " +
+              "station codes starting with a 'K' followed by the three-" +
+              "digit airport code.")
+        sys.exit(1)
+else:
+    print("Invalid format; proper format is 'python windshield.py " + 
+          "[Station Code]'\nNote: Most airports have weather station codes " +
+          "starting with a 'K' followed by the three-digit airport code.")
+    sys.exit(1)
 
 # Get current time
 now = datetime.datetime.now()
@@ -71,8 +82,10 @@ for line in file:
 # Sum the frost scores
 for score in frost_scores:
     frost_sum += score
+logging.debug("Frost Sum: " + str(frost_sum))
 
-print(str(now.month) + "/" + str(now.day) + ": ", end="")
+# Print the result
+print(now.strftime("%A, %B %d") + ": ", end="")
 if snow:
     print("There may be snow on the windshield")
 elif rain:
@@ -81,4 +94,3 @@ elif frost_sum > 12:
     print("There may be frost on the windshield")
 else:
     print("There may be nothing on the windshield")
-logging.debug("Frost Sum: " + str(frost_sum))
