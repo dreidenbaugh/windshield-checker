@@ -30,7 +30,9 @@ def get_station_code(location_lat, location_lon):
         lon = float(line[lon_index:lon_index + 10])
         dist = math.sqrt((lat - location_lat)**2 + (lon - location_lon)**2)
         if dist < dist_best:
-            dist_best = dist
-            call_best = "K" + line[call_index:call_index + 3]
+            call = line[call_index:call_index + 4].strip()
+            if len(call) > 0:
+                dist_best = dist
+                call_best = "K" + call
         
     return call_best
