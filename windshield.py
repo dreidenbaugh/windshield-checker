@@ -3,7 +3,7 @@ import datetime
 import urllib.request
 import codecs
 import sys
-import csv
+import stations
 
 snow = False
 rain = False
@@ -11,7 +11,7 @@ frost_scores = []
 frost_sum = 0
 date_time_UTC_last = None
 
-# Check for and get station code from argument
+# If 2 arguments, get station code from argument
 if len(sys.argv) is 2:
     airport_code = sys.argv[1]
     if not airport_code.isalnum():
@@ -19,11 +19,22 @@ if len(sys.argv) is 2:
               "station codes starting with a 'K' followed by the three-" +
               "digit airport code.")
         sys.exit(1)
+# If 3 arguments, look up station code using arguments as coordinates
+elif len(sys.argv) is 3:
+    try:
+        lat = float(sys.argv[1])
+        lon = float(sys.argv[2])
+    except ValueError:
+        print("Invalid coordinates")
+        sys.exit(1)
+    airport_code = stations.get_station_code(lat, lon)
 else:
-    print("Invalid format; proper format is 'python windshield.py " + 
-          "[Station Code]'\nNote: Most airports have weather station codes " +
-          "starting with a 'K' followed by the three-digit airport code.")
+    print("Invalid format; proper formats are 'python windshield.py " +
+          "[Latitude] [Longitude]' and 'python windshield.py [Station Code]'" +
+          "\nNote: Most airports have weather station codes starting with " +
+          "a 'K' followed by the three-digit airport code.")
     sys.exit(1)
+print("Checking " + airport_code + "...")
 
 # Get current time
 now = datetime.datetime.now()

@@ -4,7 +4,12 @@ Internet to roughly predict whether an exposed windshield would be
 covered with frost, rain, or snow.
 
 ## Usage
-Run on the command line as follows:
+Using geographic coordinates, run on the command line as follows:
+```
+$ python windshield.py [Latitude] [Longitude]
+```
+
+To use a weather station code, run on the command line as follows:
 ```
 $ python windshield.py [Station Code]
 ```
